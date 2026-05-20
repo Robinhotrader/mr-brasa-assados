@@ -11,6 +11,8 @@
       "resizeMode": "contain",
       "backgroundColor": "#FF6B35"
     },
+    "platforms": ["ios", "android", "web"],
+    "jsEngine": "jsc",
     "web": {
       "bundler": "metro",
       "output": "single",

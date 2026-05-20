@@ -43,11 +43,12 @@ interface AuthResult {
   error?: string;
 }
 
+// ✅ Modelo atualizado para múltiplos produtos
 export interface Pedido {
   id?: string;
   nome: string;
   telefone: string;
-  produto: string;
+  produtos: string[]; // agora é lista
   observacao?: string;
   entregue?: boolean;
   status?: string;
@@ -101,6 +102,7 @@ export const tiposProdutos: string[] = [
   'Outro'
 ];
 
+// ✅ Criar pedido com múltiplos produtos
 export const criarPedido = async (pedido: Pedido): Promise<{ success: boolean; id?: string; error?: string }> => {
   try {
     const user = getCurrentUser();
@@ -145,11 +147,9 @@ export const ouvirPedidos = (callback: (pedidos: Pedido[]) => void) => {
       id: doc.id,
       ...doc.data(),
     })) as Pedido[];
-    callback(pedidos); // TS já sabe que é Pedido[]
+    callback(pedidos);
   });
 };
-
-
 
 // ✅ Atualizar status de entrega
 export const atualizarPedidoEntregue = async (
@@ -174,7 +174,7 @@ export const limparPedidosEntregues = async (): Promise<{ success: boolean; erro
     const snapshot = await getDocs(q);
 
     const promises = snapshot.docs
-      .filter((doc) => doc.data().entregue === true) // só os entregues
+      .filter((doc) => doc.data().entregue === true)
       .map((doc) => deleteDoc(doc.ref));
 
     await Promise.all(promises);
@@ -184,6 +184,5 @@ export const limparPedidosEntregues = async (): Promise<{ success: boolean; erro
     return { success: false, error: error.message };
   }
 };
-
 
 export default { app, auth, db };

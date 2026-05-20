@@ -15,17 +15,29 @@ import { criarPedido, tiposProdutos } from '../../src/services/firebase';
 
 export const ClienteScreen: React.FC = () => {
   const { user, logout } = useAuth();
-  const router = useRouter(); // ✅ adiciona o hook do Expo Router
+  const router = useRouter();
 
   const [nome, setNome] = useState<string>('');
   const [telefone, setTelefone] = useState<string>('');
-  const [produto, setProduto] = useState<string>(tiposProdutos[0]);
+  const [produtosSelecionados, setProdutosSelecionados] = useState<string[]>([]);
   const [observacao, setObservacao] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+
+  const toggleProduto = (item: string) => {
+    setProdutosSelecionados((prev) =>
+      prev.includes(item)
+        ? prev.filter((p) => p !== item)
+        : [...prev, item]
+    );
+  };
 
   const handleAgendar = async () => {
     if (!nome || !telefone) {
       Alert.alert('Erro', 'Preencha nome e telefone');
+      return;
+    }
+    if (produtosSelecionados.length === 0) {
+      Alert.alert('Erro', 'Selecione pelo menos um produto');
       return;
     }
 
@@ -34,7 +46,7 @@ export const ClienteScreen: React.FC = () => {
     const resultado = await criarPedido({
       nome,
       telefone,
-      produto,
+      produtos: produtosSelecionados, // agora é lista
       observacao,
     });
 
@@ -42,21 +54,19 @@ export const ClienteScreen: React.FC = () => {
 
     if (resultado.success) {
       Alert.alert('Sucesso', 'Pedido agendado com sucesso! 🍗');
-      // Limpar formulário
       setNome('');
       setTelefone('');
-      setProduto(tiposProdutos[0]);
+      setProdutosSelecionados([]);
       setObservacao('');
     } else {
       Alert.alert('Erro', resultado.error);
     }
   };
 
-  // ✅ Função para sair e voltar ao login
   const handleLogout = async () => {
     const result = await logout();
     if (result.success) {
-      router.replace('/'); // volta para a tela de login
+      router.replace('/');
     } else {
       Alert.alert('Erro', result.error || 'Falha ao sair');
     }
@@ -87,21 +97,21 @@ export const ClienteScreen: React.FC = () => {
         />
 
         <View style={styles.containerSelecao}>
-          <Text style={styles.label}>Produto</Text>
+          <Text style={styles.label}>Produtos</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {tiposProdutos.map((item) => (
               <TouchableOpacity
                 key={item}
                 style={[
                   styles.botaoProduto,
-                  produto === item && styles.botaoProdutoSelecionado
+                  produtosSelecionados.includes(item) && styles.botaoProdutoSelecionado
                 ]}
-                onPress={() => setProduto(item)}
+                onPress={() => toggleProduto(item)}
               >
                 <Text
                   style={[
                     styles.textoProduto,
-                    produto === item && styles.textoProdutoSelecionado
+                    produtosSelecionados.includes(item) && styles.textoProdutoSelecionado
                   ]}
                 >
                   {item}
@@ -127,7 +137,7 @@ export const ClienteScreen: React.FC = () => {
 
         <Button
           title="Sair"
-          onPress={handleLogout} // ✅ usa a função com redirecionamento
+          onPress={handleLogout}
           backgroundColor="#999"
         />
       </View>
@@ -136,7 +146,7 @@ export const ClienteScreen: React.FC = () => {
         <Text style={styles.infoTitulo}>ℹ️ Informações</Text>
         <Text style={styles.infoTexto}>• Seu pedido será enviado para o restaurante</Text>
         <Text style={styles.infoTexto}>• Os funcionários entrarão em contato pelo telefone</Text>
-        <Text style={styles.infoTexto}>• Temos: frango, costela, medalhão e mais</Text>
+        <Text style={styles.infoTexto}>• Agora você pode escolher vários produtos juntos</Text>
       </View>
     </ScrollView>
   );

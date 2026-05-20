@@ -102,11 +102,11 @@ export const AdminScreen: React.FC = () => {
         ) : (
           pedidosEntregues.map((pedido) => (
             <OrderCard
-              key={pedido.id}
-              pedido={pedido}
-              isAdmin={true}
-              onToggleEntregue={handleToggleEntregue}
-            />
+  key={pedido.id}
+  pedido={pedido}
+  isAdmin={true}
+  onToggleEntregue={handleToggleEntregue}
+/>
           ))
         )}
       </View>

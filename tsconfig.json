@@ -3,13 +3,13 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./src/*"]
     }
   },
   "include": [
-    "**/*.ts",
-    "**/*.tsx"
-, "src/services/firebase.js", "src/services/firebase.js"  ]
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/services/firebase.ts",
+    "src/services/firebase.js"
+  ]
 }

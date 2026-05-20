@@ -12,8 +12,18 @@ export const OrderCard: React.FC<OrderCardProps> = ({ pedido, isAdmin, onToggleE
   return (
     <View style={[styles.card, pedido.entregue && styles.cardEntregue]}>
       <Text style={styles.nome}>{pedido.nome}</Text>
-      <Text style={styles.produto}>{pedido.produto}</Text>
+
+      {/* ✅ Exibe lista de produtos */}
+      {pedido.produtos && pedido.produtos.length > 0 ? (
+        <Text style={styles.produto}>
+          {pedido.produtos.join(", ")}
+        </Text>
+      ) : (
+        <Text style={styles.produto}>Nenhum produto selecionado</Text>
+      )}
+
       <Text style={styles.telefone}>{pedido.telefone}</Text>
+
       {pedido.observacao ? (
         <Text style={styles.observacao}>Obs: {pedido.observacao}</Text>
       ) : null}
