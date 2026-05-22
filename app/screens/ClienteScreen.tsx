@@ -1,187 +1,115 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
-} from 'react-native';
-import { Button } from '../../src/components/Button';
-import { Input } from '../../src/components/Input';
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../../src/context/AuthContext';
 import { criarPedido, tiposProdutos } from '../../src/services/firebase';
 
-export const ClienteScreen: React.FC = () => {
-  const { user, logout } = useAuth();
+export default function ClienteScreen() {
+  const [nome, setNome] = useState('');
+  const [telefone, setTelefone] = useState('');
+  const [produtosSelecionados, setProdutosSelecionados] = useState<string[]>([]);
+  const [observacao, setObservacao] = useState('');
+
+  const { user, logout } = useAuth();   // 🔹 agora pegamos também o user
   const router = useRouter();
 
-  const [nome, setNome] = useState<string>('');
-  const [telefone, setTelefone] = useState<string>('');
-  const [produtosSelecionados, setProdutosSelecionados] = useState<string[]>([]);
-  const [observacao, setObservacao] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
-
-  const toggleProduto = (item: string) => {
-    setProdutosSelecionados((prev) =>
-      prev.includes(item)
-        ? prev.filter((p) => p !== item)
-        : [...prev, item]
-    );
+  const toggleProduto = (produto: string) => {
+    if (produtosSelecionados.includes(produto)) {
+      setProdutosSelecionados(produtosSelecionados.filter(p => p !== produto));
+    } else {
+      setProdutosSelecionados([...produtosSelecionados, produto]);
+    }
   };
 
   const handleAgendar = async () => {
-    if (!nome || !telefone) {
-      Alert.alert('Erro', 'Preencha nome e telefone');
-      return;
-    }
-    if (produtosSelecionados.length === 0) {
-      Alert.alert('Erro', 'Selecione pelo menos um produto');
+    if (!nome || !telefone || produtosSelecionados.length === 0) {
+      Alert.alert('Erro', 'Preencha nome, telefone e selecione ao menos um produto.');
       return;
     }
 
-    setLoading(true);
+    const pedido = { nome, telefone, produtos: produtosSelecionados, observacao };
+    const result = await criarPedido(pedido);
 
-    const resultado = await criarPedido({
-      nome,
-      telefone,
-      produtos: produtosSelecionados, // agora é lista
-      observacao,
-    });
-
-    setLoading(false);
-
-    if (resultado.success) {
-      Alert.alert('Sucesso', 'Pedido agendado com sucesso! 🍗');
+    if (result.success) {
+      Alert.alert('Sucesso', 'Pedido agendado com sucesso!');
       setNome('');
       setTelefone('');
       setProdutosSelecionados([]);
       setObservacao('');
     } else {
-      Alert.alert('Erro', resultado.error);
+      Alert.alert('Erro', result.error || 'Não foi possível agendar o pedido.');
     }
   };
 
   const handleLogout = async () => {
     const result = await logout();
     if (result.success) {
-      router.replace('/');
+      router.replace('/'); // volta para tela inicial (login)
     } else {
-      Alert.alert('Erro', result.error || 'Falha ao sair');
+      Alert.alert('Erro', result.error || 'Não foi possível sair.');
     }
   };
 
+  // 🔹 Mensagem de boas-vindas
+  const welcomeMessage = user?.email === "convidado@mrbrasa.com"
+    ? "Bem-vindo, Convidado 👋"
+    : `Bem-vindo, ${user?.email}`;
+
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.titulo}>🍗 MR. Brasa Assados</Text>
-        <Text style={styles.subtitulo}>Agende seu pedido</Text>
-        <Text style={styles.usuario}>Logado como: {user?.email}</Text>
+    <View style={styles.container}>
+      <Text style={styles.titulo}>{welcomeMessage}</Text>
+      <Text style={styles.subtitulo}>🍗 Agendamento de Pedido</Text>
+
+      {/* Inputs */}
+      <TextInput style={styles.input} placeholder="Nome" value={nome} onChangeText={setNome} />
+      <TextInput style={styles.input} placeholder="Telefone" value={telefone} onChangeText={setTelefone} keyboardType="phone-pad" />
+
+      <Text style={styles.subtitulo}>Selecione os produtos:</Text>
+      <View style={styles.cardContainer}>
+        {tiposProdutos.map((produto) => (
+          <TouchableOpacity
+            key={produto}
+            style={[styles.card, produtosSelecionados.includes(produto) && styles.cardSelecionado]}
+            onPress={() => toggleProduto(produto)}
+          >
+            <Text style={styles.cardTitulo}>{produto}</Text>
+            <Text style={styles.cardDescricao}>Clique para selecionar</Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
-      <View style={styles.form}>
-        <Input
-          label="Nome completo"
-          value={nome}
-          onChangeText={setNome}
-          placeholder="Seu nome"
-        />
+      <TextInput
+        style={[styles.input, { height: 80 }]}
+        placeholder="Observação (opcional)"
+        value={observacao}
+        onChangeText={setObservacao}
+        multiline
+      />
 
-        <Input
-          label="Telefone"
-          value={telefone}
-          onChangeText={setTelefone}
-          placeholder="(11) 99999-9999"
-          keyboardType="phone-pad"
-        />
+      {/* Botão agendar */}
+      <TouchableOpacity style={styles.botao} onPress={handleAgendar}>
+        <Text style={styles.botaoTexto}>Agendar Pedido</Text>
+      </TouchableOpacity>
 
-        <View style={styles.containerSelecao}>
-          <Text style={styles.label}>Produtos</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {tiposProdutos.map((item) => (
-              <TouchableOpacity
-                key={item}
-                style={[
-                  styles.botaoProduto,
-                  produtosSelecionados.includes(item) && styles.botaoProdutoSelecionado
-                ]}
-                onPress={() => toggleProduto(item)}
-              >
-                <Text
-                  style={[
-                    styles.textoProduto,
-                    produtosSelecionados.includes(item) && styles.textoProdutoSelecionado
-                  ]}
-                >
-                  {item}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
-        <Input
-          label="Observações (opcional)"
-          value={observacao}
-          onChangeText={setObservacao}
-          placeholder="Ex: sem cebola, entrega às 19h, etc"
-        />
-
-        <Button
-          title={loading ? 'Agendando...' : '🍗 Agendar Pedido'}
-          onPress={handleAgendar}
-          backgroundColor="#FF6B35"
-          disabled={loading}
-        />
-
-        <Button
-          title="Sair"
-          onPress={handleLogout}
-          backgroundColor="#999"
-        />
-      </View>
-
-      <View style={styles.informacoes}>
-        <Text style={styles.infoTitulo}>ℹ️ Informações</Text>
-        <Text style={styles.infoTexto}>• Seu pedido será enviado para o restaurante</Text>
-        <Text style={styles.infoTexto}>• Os funcionários entrarão em contato pelo telefone</Text>
-        <Text style={styles.infoTexto}>• Agora você pode escolher vários produtos juntos</Text>
-      </View>
-    </ScrollView>
+      {/* Botão sair */}
+      <TouchableOpacity style={styles.botaoSair} onPress={handleLogout}>
+        <Text style={styles.botaoTexto}>Sair</Text>
+      </TouchableOpacity>
+    </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  header: { backgroundColor: '#FF6B35', padding: 20, alignItems: 'center' },
-  titulo: { fontSize: 24, fontWeight: 'bold', color: '#fff', marginBottom: 5 },
-  subtitulo: { fontSize: 16, color: '#fff', opacity: 0.9, marginBottom: 10 },
-  usuario: { fontSize: 12, color: '#fff', opacity: 0.7 },
-  form: { padding: 20 },
-  containerSelecao: { marginBottom: 15 },
-  label: { fontSize: 16, marginBottom: 10, color: '#333', fontWeight: '600' },
-  botaoProduto: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    marginRight: 10,
-    minWidth: 120,
-    alignItems: 'center',
-  },
-  botaoProdutoSelecionado: { backgroundColor: '#FF6B35', borderColor: '#FF6B35' },
-  textoProduto: { fontSize: 14, color: '#333', textAlign: 'center' },
-  textoProdutoSelecionado: { color: '#fff', fontWeight: '600' },
-  informacoes: {
-    backgroundColor: '#fff',
-    padding: 20,
-    margin: 20,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  infoTitulo: { fontSize: 18, fontWeight: 'bold', marginBottom: 10, color: '#333' },
-  infoTexto: { fontSize: 14, color: '#666', marginBottom: 5 },
+  container: { flex: 1, padding: 20, backgroundColor: '#f5f5f5' },
+  titulo: { fontSize: 22, fontWeight: 'bold', color: '#FF6B35', marginBottom: 10, textAlign: 'center' },
+  subtitulo: { fontSize: 16, fontWeight: '600', marginVertical: 10, textAlign: 'center' },
+  input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, marginBottom: 12, backgroundColor: '#fff' },
+  cardContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+  card: { width: '48%', backgroundColor: '#fff', borderRadius: 10, padding: 15, marginBottom: 12, borderWidth: 1, borderColor: '#eee', elevation: 3, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4 },
+  cardSelecionado: { borderColor: '#FF6B35', backgroundColor: '#FFEDE4' },
+  cardTitulo: { fontSize: 16, fontWeight: 'bold', color: '#333' },
+  cardDescricao: { fontSize: 12, color: '#666', marginTop: 4 },
+  botao: { marginTop: 20, backgroundColor: '#FF6B35', padding: 15, borderRadius: 8, alignItems: 'center' },
+  botaoSair: { marginTop: 10, backgroundColor: '#999', padding: 15, borderRadius: 8, alignItems: 'center' },
+  botaoTexto: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
 });

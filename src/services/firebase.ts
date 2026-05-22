@@ -48,7 +48,7 @@ export interface Pedido {
   id?: string;
   nome: string;
   telefone: string;
-  produtos: string[]; // agora é lista
+  produtos: string[];
   observacao?: string;
   entregue?: boolean;
   status?: string;
@@ -57,7 +57,7 @@ export interface Pedido {
   createdAt?: any;
 }
 
-// 🔐 Autenticação
+// 🔐 Autenticação normal
 export const login = async (email: string, senha: string): Promise<AuthResult> => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, senha);
@@ -90,6 +90,18 @@ export const getCurrentUser = (): User | null => auth.currentUser;
 export const onAuthStateChange = (callback: (user: User | null) => void) =>
   onAuthStateChanged(auth, callback);
 
+// 🔓 Login convidado (sem cadastro) usando usuário fixo
+export const loginAnonimo = async (): Promise<AuthResult> => {
+  try {
+    // 🔹 Faz login com usuário convidado padrão
+    const userCredential = await signInWithEmailAndPassword(auth, "convidado@mrbrasa.com", "123456");
+
+    return { success: true, user: userCredential.user };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
 // 🍗 Firestore — Pedidos
 export const tiposProdutos: string[] = [
   'Frango sem recheio',
@@ -102,7 +114,7 @@ export const tiposProdutos: string[] = [
   'Outro'
 ];
 
-// ✅ Criar pedido com múltiplos produtos
+// ✅ Criar pedido
 export const criarPedido = async (pedido: Pedido): Promise<{ success: boolean; id?: string; error?: string }> => {
   try {
     const user = getCurrentUser();
@@ -111,10 +123,10 @@ export const criarPedido = async (pedido: Pedido): Promise<{ success: boolean; i
     const novoPedido: Pedido = {
       ...pedido,
       clienteId: user.uid,
-      clienteEmail: user.email ?? '',
+      clienteEmail: user.email ?? 'convidado',
       createdAt: serverTimestamp(),
       entregue: false,
-      status: 'pendente'
+      status: 'pendente',
     };
 
     const docRef = await addDoc(collection(db, 'pedidos'), novoPedido);
@@ -124,7 +136,7 @@ export const criarPedido = async (pedido: Pedido): Promise<{ success: boolean; i
   }
 };
 
-// 🔎 Buscar pedidos (consulta única)
+// 🔎 Buscar pedidos
 export const buscarPedidos = async (): Promise<{ success: boolean; pedidos?: Pedido[]; error?: string }> => {
   try {
     const q = query(collection(db, 'pedidos'), orderBy('createdAt', 'desc'));
@@ -151,7 +163,7 @@ export const ouvirPedidos = (callback: (pedidos: Pedido[]) => void) => {
   });
 };
 
-// ✅ Atualizar status de entrega
+// ✅ Atualizar status
 export const atualizarPedidoEntregue = async (
   pedidoId: string,
   entregue: boolean
@@ -168,6 +180,7 @@ export const atualizarPedidoEntregue = async (
   }
 };
 
+// 🧹 Limpar pedidos entregues
 export const limparPedidosEntregues = async (): Promise<{ success: boolean; error?: string }> => {
   try {
     const q = query(collection(db, 'pedidos'));

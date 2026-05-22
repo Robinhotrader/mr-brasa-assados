@@ -2,6 +2,7 @@ import { User } from 'firebase/auth';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import {
   login,
+  loginAnonimo,
   logout,
   onAuthStateChange,
   register
@@ -14,6 +15,7 @@ interface AuthContextType {
   login: (email: string, senha: string) => Promise<{ success: boolean; user?: User; error?: string }>;
   register: (email: string, senha: string) => Promise<{ success: boolean; user?: User; error?: string }>;
   logout: () => Promise<{ success: boolean; error?: string }>;
+  loginAnonimo: () => Promise<{ success: boolean; user?: User; error?: string }>;
   isAuthenticated: boolean;
 }
 
@@ -39,12 +41,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChange((user: User | null) => {
       setUser(user);
-      // Verificar se é admin
-      if (user) {
-        setIsAdmin(user.email === 'admin@mrbrasa.com');
+
+      // 🔹 Admin só se for o email do admin
+      if (user?.email === 'admin@mrbrasa.com') {
+        setIsAdmin(true);
       } else {
         setIsAdmin(false);
       }
+
       setLoading(false);
     });
 
@@ -63,10 +67,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return await register(email, senha);
   };
 
+ const handleLoginAnonimo = async () => {
+  const result = await loginAnonimo();
+  if (result.success && result.user) {
+    setUser(result.user);       // 🔹 garante que o contexto reconhece o convidado
+    setIsAdmin(false);          // 🔹 convidado nunca é admin
+  }
+  return result;
+};
+
+
   const handleLogout = async () => {
     const result = await logout();
     if (result.success) {
       setIsAdmin(false);
+      setUser(null);
     }
     return result;
   };
@@ -78,6 +93,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login: handleLogin,
     register: handleRegister,
     logout: handleLogout,
+    loginAnonimo: handleLoginAnonimo,
     isAuthenticated: !!user,
   };
 

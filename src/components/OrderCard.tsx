@@ -28,6 +28,11 @@ export const OrderCard: React.FC<OrderCardProps> = ({ pedido, isAdmin, onToggleE
         <Text style={styles.observacao}>Obs: {pedido.observacao}</Text>
       ) : null}
 
+      {/* 🔹 Exibe email ou "Acesso rápido" se for convidado */}
+      <Text style={styles.email}>
+        {pedido.clienteEmail === 'convidado' ? 'Acesso rápido' : pedido.clienteEmail}
+      </Text>
+
       {isAdmin && (
         <TouchableOpacity
           style={[
@@ -62,6 +67,7 @@ const styles = StyleSheet.create({
   produto: { fontSize: 16, color: '#FF6B35', marginVertical: 4 },
   telefone: { fontSize: 14, color: '#666' },
   observacao: { fontSize: 13, color: '#999', marginTop: 4 },
+  email: { fontSize: 13, color: '#555', marginTop: 4, fontStyle: 'italic' },
   botao: {
     marginTop: 10,
     padding: 10,
