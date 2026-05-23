@@ -108,10 +108,12 @@ export const tiposProdutos: string[] = [
   'Frango com recheio',
   'Costela bovina',
   'Costela suína',
-  'Medalhão',
-  'Linguiça artesanal',
-  'Picanha',
-  'Outro'
+  'Tender',
+  'Linguiça Pernil/ Frango',
+  'Coxa e Sobre Coxa',
+  'Meio Frango', 
+  'Espetinho Medalhão Suino',
+  'Outros',
 ];
 
 // ✅ Criar pedido
