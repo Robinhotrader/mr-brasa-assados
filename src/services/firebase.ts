@@ -112,7 +112,7 @@ export const tiposProdutos: string[] = [
   'Linguiça Pernil/ Frango',
   'Coxa e Sobre Coxa',
   'Meio Frango', 
-  'Espetinho Medalhão Suino',
+  'Espetinho Medalhão Suíno',
   'Outros',
 ];
 

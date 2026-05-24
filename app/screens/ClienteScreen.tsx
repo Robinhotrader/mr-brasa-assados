@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../../src/context/AuthContext';
 import { criarPedido, tiposProdutos } from '../../src/services/firebase';
 
@@ -9,8 +9,9 @@ export default function ClienteScreen() {
   const [telefone, setTelefone] = useState('');
   const [produtosSelecionados, setProdutosSelecionados] = useState<string[]>([]);
   const [observacao, setObservacao] = useState('');
+  const [pedidoConcluido, setPedidoConcluido] = useState(false); // 🔹 controla modal
 
-  const { user, logout } = useAuth();   // 🔹 agora pegamos também o user
+  const { user, logout } = useAuth();
   const router = useRouter();
 
   const toggleProduto = (produto: string) => {
@@ -23,7 +24,8 @@ export default function ClienteScreen() {
 
   const handleAgendar = async () => {
     if (!nome || !telefone || produtosSelecionados.length === 0) {
-      Alert.alert('Erro', 'Preencha nome, telefone e selecione ao menos um produto.');
+      // aviso simples de erro
+      setPedidoConcluido(false);
       return;
     }
 
@@ -31,26 +33,23 @@ export default function ClienteScreen() {
     const result = await criarPedido(pedido);
 
     if (result.success) {
-      Alert.alert('Sucesso', 'Pedido agendado com sucesso!');
+      setPedidoConcluido(true); // 🔹 abre modal de sucesso
       setNome('');
       setTelefone('');
       setProdutosSelecionados([]);
       setObservacao('');
     } else {
-      Alert.alert('Erro', result.error || 'Não foi possível agendar o pedido.');
+      setPedidoConcluido(false);
     }
   };
 
   const handleLogout = async () => {
     const result = await logout();
     if (result.success) {
-      router.replace('/'); // volta para tela inicial (login)
-    } else {
-      Alert.alert('Erro', result.error || 'Não foi possível sair.');
+      router.replace('/');
     }
   };
 
-  // 🔹 Mensagem de boas-vindas
   const welcomeMessage = user?.email === "convidado@mrbrasa.com"
     ? "Bem-vindo, Convidado 👋"
     : `Bem-vindo, ${user?.email}`;
@@ -60,7 +59,6 @@ export default function ClienteScreen() {
       <Text style={styles.titulo}>{welcomeMessage}</Text>
       <Text style={styles.subtitulo}>🍗 Agendamento de Pedido</Text>
 
-      {/* Inputs */}
       <TextInput style={styles.input} placeholder="Nome" value={nome} onChangeText={setNome} />
       <TextInput style={styles.input} placeholder="Telefone" value={telefone} onChangeText={setTelefone} keyboardType="phone-pad" />
 
@@ -79,22 +77,41 @@ export default function ClienteScreen() {
       </View>
 
       <TextInput
-        style={[styles.input, { height: 80 }]}
+        style={[styles.input, { height: 120 }]}
         placeholder="Observação (opcional)"
         value={observacao}
         onChangeText={setObservacao}
         multiline
       />
 
-      {/* Botão agendar */}
       <TouchableOpacity style={styles.botao} onPress={handleAgendar}>
         <Text style={styles.botaoTexto}>Agendar Pedido</Text>
       </TouchableOpacity>
 
-      {/* Botão sair */}
       <TouchableOpacity style={styles.botaoSair} onPress={handleLogout}>
         <Text style={styles.botaoTexto}>Sair</Text>
       </TouchableOpacity>
+
+      {/* 🔹 Modal de sucesso */}
+      <Modal
+        transparent
+        visible={pedidoConcluido}
+        animationType="fade"
+        onRequestClose={() => setPedidoConcluido(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitulo}>🎉 Pedido concluído!</Text>
+            <Text style={styles.modalTexto}>Seu pedido foi agendado com sucesso.</Text>
+            <TouchableOpacity
+              style={styles.modalBotao}
+              onPress={() => setPedidoConcluido(false)}
+            >
+              <Text style={styles.modalBotaoTexto}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -112,4 +129,10 @@ const styles = StyleSheet.create({
   botao: { marginTop: 20, backgroundColor: '#FF6B35', padding: 15, borderRadius: 8, alignItems: 'center' },
   botaoSair: { marginTop: 10, backgroundColor: '#999', padding: 15, borderRadius: 8, alignItems: 'center' },
   botaoTexto: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+  modalContent: { backgroundColor: '#fff', padding: 20, borderRadius: 10, width: '80%', alignItems: 'center' },
+  modalTitulo: { fontSize: 20, fontWeight: 'bold', color: '#FF6B35', marginBottom: 10 },
+  modalTexto: { fontSize: 16, color: '#333', marginBottom: 20, textAlign: 'center' },
+  modalBotao: { backgroundColor: '#FF6B35', padding: 10, borderRadius: 8 },
+  modalBotaoTexto: { color: '#fff', fontWeight: 'bold' },
 });
