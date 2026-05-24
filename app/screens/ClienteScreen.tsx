@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Animated, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../../src/context/AuthContext';
 import { criarPedido, tiposProdutos } from '../../src/services/firebase';
 
@@ -9,7 +9,10 @@ export default function ClienteScreen() {
   const [telefone, setTelefone] = useState('');
   const [produtosSelecionados, setProdutosSelecionados] = useState<string[]>([]);
   const [observacao, setObservacao] = useState('');
-  const [pedidoConcluido, setPedidoConcluido] = useState(false); // 🔹 controla modal
+  const [pedidoConcluido, setPedidoConcluido] = useState(false);
+
+  // 🔹 altura animada para o campo de observação
+  const [alturaInput] = useState(new Animated.Value(120));
 
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -24,7 +27,6 @@ export default function ClienteScreen() {
 
   const handleAgendar = async () => {
     if (!nome || !telefone || produtosSelecionados.length === 0) {
-      // aviso simples de erro
       setPedidoConcluido(false);
       return;
     }
@@ -33,11 +35,16 @@ export default function ClienteScreen() {
     const result = await criarPedido(pedido);
 
     if (result.success) {
-      setPedidoConcluido(true); // 🔹 abre modal de sucesso
+      setPedidoConcluido(true);
       setNome('');
       setTelefone('');
       setProdutosSelecionados([]);
       setObservacao('');
+      Animated.timing(alturaInput, {
+        toValue: 120, // 🔹 reseta altura depois de enviar
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
     } else {
       setPedidoConcluido(false);
     }
@@ -76,13 +83,24 @@ export default function ClienteScreen() {
         ))}
       </View>
 
-      <TextInput
-        style={[styles.input, { height: 120 }]}
-        placeholder="Observação (opcional)"
-        value={observacao}
-        onChangeText={setObservacao}
-        multiline
-      />
+      {/* 🔹 Observação com altura animada */}
+      <Animated.View style={{ width: '100%', marginBottom: 12 }}>
+        <TextInput
+          style={[styles.input, { height: alturaInput, textAlignVertical: 'top' }]}
+          placeholder="Observação (opcional)"
+          value={observacao}
+          onChangeText={setObservacao}
+          multiline
+          onContentSizeChange={(event) => {
+            const novaAltura = Math.max(120, event.nativeEvent.contentSize.height);
+            Animated.timing(alturaInput, {
+              toValue: novaAltura,
+              duration: 200, // 🔹 animação suave
+              useNativeDriver: false,
+            }).start();
+          }}
+        />
+      </Animated.View>
 
       <TouchableOpacity style={styles.botao} onPress={handleAgendar}>
         <Text style={styles.botaoTexto}>Agendar Pedido</Text>
