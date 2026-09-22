@@ -43,7 +43,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(user);
 
       // 🔹 Admin só se for o email do admin
-      if (user?.email === 'admin@mrbrasa.com') {
+      if (user?.email === 'bobyyasmim@gmail.com') {
         setIsAdmin(true);
       } else {
         setIsAdmin(false);
@@ -58,7 +58,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const handleLogin = async (email: string, senha: string) => {
     const result = await login(email, senha);
     if (result.success) {
-      setIsAdmin(email === 'admin@mrbrasa.com');
+      setIsAdmin(email === 'bobyyasmim@gmail.com');
     }
     return result;
   };
