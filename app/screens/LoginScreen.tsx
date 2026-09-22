@@ -37,7 +37,7 @@ export const LoginScreen: React.FC = () => {
       if (!result.success) {
         Alert.alert('Erro', result.error);
       } else {
-        if (email === 'admin@mrbrasa.com') {
+        if (email === 'bobyyasmim@gmail.com') {
           router.replace('/admin');
         } else {
           router.replace('/cliente');
