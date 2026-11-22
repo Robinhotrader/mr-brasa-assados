@@ -1,12 +1,14 @@
 import React from 'react';
-import { GestureResponderEvent, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { colors } from '../theme';
 
 interface ButtonProps {
   title: string;
-  onPress: (event: GestureResponderEvent) => void;
+  onPress: () => void;
   backgroundColor?: string;
   textColor?: string;
   disabled?: boolean;
+  accessibilityLabel?: string;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -15,12 +17,16 @@ export const Button: React.FC<ButtonProps> = ({
   backgroundColor = '#FF6B35',
   textColor = '#fff',
   disabled = false,
+  accessibilityLabel,
 }) => {
   return (
     <TouchableOpacity
       style={[styles.button, { backgroundColor }, disabled && styles.disabled]}
       onPress={onPress}
       disabled={disabled}
+      activeOpacity={0.86}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel || title}
     >
       <Text style={[styles.text, { color: textColor }]}>{title}</Text>
     </TouchableOpacity>
@@ -29,16 +35,21 @@ export const Button: React.FC<ButtonProps> = ({
 
 const styles = StyleSheet.create({
   button: {
-    padding: 15,
-    borderRadius: 8,
+    minHeight: 52,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderRadius: 16,
     alignItems: 'center',
-    marginVertical: 10,
+    justifyContent: 'center',
+    marginVertical: 7,
+    backgroundColor: colors.brand,
   },
   disabled: {
     opacity: 0.5,
   },
   text: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: 0.1,
   },
 });

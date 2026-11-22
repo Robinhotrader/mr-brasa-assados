@@ -8,6 +8,11 @@ import {
   register
 } from '../services/firebase';
 
+export const EMAILS_ADMIN = ['admin@mrbrasa.com', 'bobyyasmim@gmail.com'];
+
+export const ehEmailAdministrador = (email: string | null | undefined): boolean =>
+  EMAILS_ADMIN.includes(email?.trim().toLowerCase() ?? '');
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -42,12 +47,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const unsubscribe = onAuthStateChange((user: User | null) => {
       setUser(user);
 
-      // 🔹 Admin só se for o email do admin
-      if (user?.email === 'bobyyasmim@gmail.com') {
-        setIsAdmin(true);
-      } else {
-        setIsAdmin(false);
-      }
+      setIsAdmin(ehEmailAdministrador(user?.email));
 
       setLoading(false);
     });
@@ -58,7 +58,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const handleLogin = async (email: string, senha: string) => {
     const result = await login(email, senha);
     if (result.success) {
-      setIsAdmin(email === 'bobyyasmim@gmail.com');
+      setIsAdmin(ehEmailAdministrador(result.user?.email ?? email));
     }
     return result;
   };

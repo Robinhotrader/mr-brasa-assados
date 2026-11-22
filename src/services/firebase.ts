@@ -154,7 +154,10 @@ export const buscarPedidos = async (): Promise<{ success: boolean; pedidos?: Ped
 };
 
 // 🔔 Ouvir pedidos em tempo real
-export const ouvirPedidos = (callback: (pedidos: Pedido[]) => void) => {
+export const ouvirPedidos = (
+  callback: (pedidos: Pedido[]) => void,
+  onError?: (mensagem: string) => void,
+) => {
   const q = query(collection(db, 'pedidos'), orderBy('createdAt', 'desc'));
   return onSnapshot(q, (snapshot) => {
     const pedidos: Pedido[] = snapshot.docs.map((doc) => ({
@@ -162,6 +165,8 @@ export const ouvirPedidos = (callback: (pedidos: Pedido[]) => void) => {
       ...doc.data(),
     })) as Pedido[];
     callback(pedidos);
+  }, (error) => {
+    onError?.(error.message);
   });
 };
 

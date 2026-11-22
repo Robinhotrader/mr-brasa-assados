@@ -1,5 +1,13 @@
 import React from 'react';
-import { KeyboardTypeOptions, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  KeyboardTypeOptions,
+  ReturnKeyTypeOptions,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import { colors } from '../theme';
 
 interface InputProps {
   label?: string;
@@ -8,6 +16,10 @@ interface InputProps {
   placeholder?: string;
   keyboardType?: KeyboardTypeOptions;
   secureTextEntry?: boolean;
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  autoCorrect?: boolean;
+  returnKeyType?: ReturnKeyTypeOptions;
+  onSubmitEditing?: () => void;
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -17,6 +29,10 @@ export const Input: React.FC<InputProps> = ({
   placeholder,
   keyboardType = 'default',
   secureTextEntry = false,
+  autoCapitalize = 'sentences',
+  autoCorrect = true,
+  returnKeyType = 'done',
+  onSubmitEditing,
 }) => {
   return (
     <View style={styles.container}>
@@ -28,7 +44,11 @@ export const Input: React.FC<InputProps> = ({
         placeholder={placeholder}
         keyboardType={keyboardType}
         secureTextEntry={secureTextEntry}
-        placeholderTextColor="#999"
+        autoCapitalize={autoCapitalize}
+        autoCorrect={autoCorrect}
+        returnKeyType={returnKeyType}
+        onSubmitEditing={onSubmitEditing}
+        placeholderTextColor={colors.muted}
       />
     </View>
   );
@@ -36,21 +56,22 @@ export const Input: React.FC<InputProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 15,
+    marginBottom: 14,
   },
   label: {
-    fontSize: 16,
-    marginBottom: 5,
-    color: '#333',
+    fontSize: 13,
+    marginBottom: 7,
+    color: colors.ink,
     fontWeight: '600',
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
+    borderColor: colors.line,
+    borderRadius: 14,
+    paddingHorizontal: 15,
+    paddingVertical: 13,
     fontSize: 16,
-    color: '#333',
+    color: colors.ink,
   },
 });
