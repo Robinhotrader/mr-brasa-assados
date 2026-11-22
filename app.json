@@ -1,3 +1,4 @@
+
 {
   "expo": {
     "name": "MR Brasa Assados",
@@ -6,13 +7,18 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/images/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#FF6B35"
-    },
     "platforms": ["ios", "android", "web"],
-    "jsEngine": "jsc",
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#FF6B35",
+          "imageWidth": 200
+        }
+      ]
+    ],
     "web": {
       "bundler": "metro",
       "output": "single",
